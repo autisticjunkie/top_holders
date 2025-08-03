@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: telegram-token-holder-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python telegram_bot.py
+    plan: free
+    envVars:
+      - key: ALCHEMY_API_KEY
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: AUTHORIZED_USER_ID
+        sync: false
