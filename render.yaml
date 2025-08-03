@@ -1,5 +1,5 @@
 services:
-  - type: web
+  - type: worker
     name: telegram-token-holder-bot
     env: python
     pythonVersion: "3.11"
@@ -13,5 +13,3 @@ services:
         sync: false
       - key: AUTHORIZED_USER_ID
         sync: false
-      - key: PORT
-        value: "10000"

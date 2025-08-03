@@ -255,31 +255,8 @@ I'll show you each holder's balance and their other significant token holdings!
     def run(self):
         """Start the bot"""
         logger.info("Starting Token Holder Analysis Bot...")
+        logger.info("Using polling mode for maximum compatibility")
         
-        # Check if running on Render (has PORT env var)
-        port = os.getenv('PORT')
-        if port:
-            # Use webhooks on Render to avoid conflicts
-            logger.info(f"Starting webhook server on port {port}")
-            webhook_url = f"https://telegram-token-holder-bot.onrender.com"
-            try:
-                self.application.run_webhook(
-                    listen="0.0.0.0",
-                    port=int(port),
-                    webhook_url=webhook_url,
-                    allowed_updates=Update.ALL_TYPES,
-                    drop_pending_updates=True
-                )
-            except Exception as e:
-                logger.error(f"Webhook failed, falling back to polling: {e}")
-                self._run_polling()
-        else:
-            # Use polling for local development
-            logger.info("Starting polling mode for local development")
-            self._run_polling()
-    
-    def _run_polling(self):
-        """Run bot in polling mode with conflict handling"""
         try:
             self.application.run_polling(
                 allowed_updates=Update.ALL_TYPES,
