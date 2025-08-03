@@ -252,10 +252,42 @@ I'll show you each holder's balance and their other significant token holdings!
         
         return response
     
+    async def clear_webhook(self):
+        """Clear any existing webhook to prevent conflicts"""
+        try:
+            await self.application.bot.delete_webhook(drop_pending_updates=True)
+            logger.info("Webhook cleared successfully")
+        except Exception as e:
+            logger.warning(f"Could not clear webhook: {e}")
+    
     def run(self):
         """Start the bot"""
         logger.info("Starting Token Holder Analysis Bot...")
-        self.application.run_polling(allowed_updates=Update.ALL_TYPES)
+        
+        # Clear webhook before starting polling
+        import asyncio
+        try:
+            asyncio.run(self.clear_webhook())
+        except Exception as e:
+            logger.warning(f"Webhook clearing failed: {e}")
+        
+        # Start polling with conflict resolution
+        try:
+            self.application.run_polling(
+                allowed_updates=Update.ALL_TYPES,
+                drop_pending_updates=True,  # Clear any pending updates
+                close_loop=False
+            )
+        except Exception as e:
+            logger.error(f"Polling failed: {e}")
+            # Wait a bit and retry
+            import time
+            time.sleep(5)
+            logger.info("Retrying bot startup...")
+            self.application.run_polling(
+                allowed_updates=Update.ALL_TYPES,
+                drop_pending_updates=True
+            )
 
 def main():
     """Main function to run the bot"""
