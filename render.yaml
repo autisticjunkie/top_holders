@@ -13,3 +13,5 @@ services:
         sync: false
       - key: AUTHORIZED_USER_ID
         sync: false
+      - key: PORT
+        value: "10000"
