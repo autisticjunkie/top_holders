@@ -1,12 +1,11 @@
 services:
-  - type: worker
+  - type: web
     name: telegram-token-holder-bot
     env: python
     pythonVersion: "3.11"
     buildCommand: pip install -r requirements.txt
     startCommand: python telegram_bot.py
     plan: free
-    # Background worker - no port needed
     autoDeploy: true
     envVars:
       - key: ALCHEMY_API_KEY
@@ -15,3 +14,7 @@ services:
         sync: false
       - key: AUTHORIZED_USER_ID
         sync: false
+      - key: PORT
+        value: "10000"
+      - key: WEBHOOK_URL
+        value: "https://telegram-token-holder-bot.onrender.com"
