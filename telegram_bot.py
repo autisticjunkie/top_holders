@@ -1,5 +1,7 @@
 import os
 import logging
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
@@ -9,6 +11,22 @@ from alchemy_client import AlchemyClient
 
 # Load environment variables
 load_dotenv()
+
+# Simple health check handler for Render
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/health' or self.path == '/':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b'Bot is running!')
+        else:
+            self.send_response(404)
+            self.end_headers()
+    
+    def log_message(self, format, *args):
+        # Suppress HTTP server logs
+        pass
 
 # Configure logging
 logging.basicConfig(
@@ -258,24 +276,18 @@ I'll show you each holder's balance and their other significant token holdings!
         
         # Check if running on Render (has PORT env var)
         port = os.getenv('PORT')
-        webhook_url = os.getenv('WEBHOOK_URL')
         
-        if port and webhook_url:
-            # Use webhooks for web service (free on Render)
-            logger.info(f"Starting webhook server on port {port}")
-            logger.info(f"Webhook URL: {webhook_url}")
-            try:
-                self.application.run_webhook(
-                    listen="0.0.0.0",
-                    port=int(port),
-                    webhook_url=webhook_url,
-                    allowed_updates=Update.ALL_TYPES,
-                    drop_pending_updates=True
-                )
-            except Exception as e:
-                logger.error(f"Webhook failed: {e}")
-                logger.info("Falling back to polling mode")
-                self._run_polling()
+        if port:
+            # Start HTTP health check server for Render
+            logger.info(f"Starting health check server on port {port}")
+            server = HTTPServer(('0.0.0.0', int(port)), HealthCheckHandler)
+            server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+            server_thread.start()
+            logger.info(f"Health check server running on port {port}")
+            
+            # Use polling for bot (more reliable)
+            logger.info("Starting bot in polling mode")
+            self._run_polling()
         else:
             # Use polling for local development
             logger.info("Using polling mode for local development")
