@@ -6,6 +6,8 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python telegram_bot.py
     plan: free
+    # Background worker - no port needed
+    autoDeploy: true
     envVars:
       - key: ALCHEMY_API_KEY
         sync: false
